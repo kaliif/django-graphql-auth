@@ -36,7 +36,8 @@ from .decorators import (
 )
 
 UserModel = get_user_model()
-if app_settings.EMAIL_ASYNC_TASK and isinstance(app_settings.EMAIL_ASYNC_TASK, str):
+if app_settings.EMAIL_ASYNC_TASK and isinstance(app_settings.EMAIL_ASYNC_TASK,
+                                                str):
     async_email_func = import_string(app_settings.EMAIL_ASYNC_TASK)
 else:
     async_email_func = None
@@ -64,17 +65,15 @@ class RegisterMixin(Output):
     If allowed to not verified users login, return token.
     """
 
-    form = (
-        PasswordLessRegisterForm
-        if app_settings.ALLOW_PASSWORDLESS_REGISTRATION
-        else RegisterForm
-    )
+    form = (PasswordLessRegisterForm
+            if app_settings.ALLOW_PASSWORDLESS_REGISTRATION else RegisterForm)
 
     @classmethod
     def Field(cls, *args, **kwargs):
         if app_settings.ALLOW_LOGIN_NOT_VERIFIED:
             if using_refresh_tokens():
-                cls._meta.fields["refresh_token"] = graphene.Field(graphene.String)
+                cls._meta.fields["refresh_token"] = graphene.Field(
+                    graphene.String)
             cls._meta.fields["token"] = graphene.Field(graphene.String)
         return super().Field(*args, **kwargs)
 
@@ -93,17 +92,16 @@ class RegisterMixin(Output):
                     UserStatus.clean_email(email)
                     user = f.save()
                     send_activation = (
-                        app_settings.SEND_ACTIVATION_EMAIL is True and email
-                    )
+                        app_settings.SEND_ACTIVATION_EMAIL is True and email)
                     send_password_set = (
                         app_settings.ALLOW_PASSWORDLESS_REGISTRATION is True
                         and app_settings.SEND_PASSWORD_SET_EMAIL is True
-                        and email
-                    )
+                        and email)
                     if send_activation:
                         # TODO CHECK FOR EMAIL ASYNC SETTING
                         if async_email_func:
-                            async_email_func(user.status.send_activation_email, (info,))
+                            async_email_func(user.status.send_activation_email,
+                                             (info, ))
                         else:
                             user.status.send_activation_email(info)
 
@@ -111,21 +109,24 @@ class RegisterMixin(Output):
                         # TODO CHECK FOR EMAIL ASYNC SETTING
                         if async_email_func:
                             async_email_func(
-                                user.status.send_password_set_email, (info,)
-                            )
+                                user.status.send_password_set_email, (info, ))
                         else:
                             user.status.send_password_set_email(info)
 
                     user_registered.send(sender=cls, user=user)
 
                     if app_settings.ALLOW_LOGIN_NOT_VERIFIED:
+                        # NB! my changes here
                         payload = cls.login_on_register(
-                            root, info, password=kwargs.get("password1"), **kwargs
-                        )
-                        return_value = {}
-                        for field in cls._meta.fields:
-                            return_value[field] = getattr(payload, field)
-                        return cls(**return_value)
+                            root,
+                            info,
+                            password=kwargs.get("password1"),
+                            **kwargs)
+                        # return_value = {}
+                        # for field in cls._meta.fields:
+                        #     return_value[field] = getattr(payload, field)
+                        # return cls(**return_value)
+                        return payload
                     return cls(success=True)
                 else:
                     return cls(success=False, errors=f.errors.get_json_data())
@@ -217,7 +218,8 @@ class ResendActivationEmailMixin(Output):
             if f.is_valid():
                 user = get_user_by_email(email)
                 if async_email_func:
-                    async_email_func(user.status.resend_activation_email, (info,))
+                    async_email_func(user.status.resend_activation_email,
+                                     (info, ))
                 else:
                     user.status.resend_activation_email(info)
                 return cls(success=True)
@@ -227,7 +229,8 @@ class ResendActivationEmailMixin(Output):
         except SMTPException:
             return cls(success=False, errors=Messages.EMAIL_FAIL)
         except UserAlreadyVerified:
-            return cls(success=False, errors={"email": Messages.ALREADY_VERIFIED})
+            return cls(success=False,
+                       errors={"email": Messages.ALREADY_VERIFIED})
 
 
 class SendPasswordResetEmailMixin(Output):
@@ -251,9 +254,8 @@ class SendPasswordResetEmailMixin(Output):
             if f.is_valid():
                 user = get_user_by_email(email)
                 if async_email_func:
-                    async_email_func(
-                        user.status.send_password_reset_email, (info, [email])
-                    )
+                    async_email_func(user.status.send_password_reset_email,
+                                     (info, [email]))
                 else:
                     user.status.send_password_reset_email(info, [email])
                 return cls(success=True)
@@ -266,7 +268,8 @@ class SendPasswordResetEmailMixin(Output):
             user = get_user_by_email(email)
             try:
                 if async_email_func:
-                    async_email_func(user.status.resend_activation_email, (info,))
+                    async_email_func(user.status.resend_activation_email,
+                                     (info, ))
                 else:
                     user.status.resend_activation_email(info)
                 return cls(
@@ -392,8 +395,7 @@ class ObtainJSONWebTokenMixin(Output):
         if len(kwargs.items()) != 2:
             raise WrongUsage(
                 "Must login with password and one of the following fields %s."
-                % (app_settings.LOGIN_ALLOWED_FIELDS)
-            )
+                % (app_settings.LOGIN_ALLOWED_FIELDS))
 
         try:
             next_kwargs = None
@@ -422,9 +424,10 @@ class ObtainJSONWebTokenMixin(Output):
                 unarchiving = True
 
             if user.status.verified or app_settings.ALLOW_LOGIN_NOT_VERIFIED:
-                return cls.parent_resolve(
-                    root, info, unarchiving=unarchiving, **next_kwargs
-                )
+                return cls.parent_resolve(root,
+                                          info,
+                                          unarchiving=unarchiving,
+                                          **next_kwargs)
             if user.check_password(password):
                 raise UserNotVerified
             raise InvalidCredentials
@@ -435,6 +438,7 @@ class ObtainJSONWebTokenMixin(Output):
 
 
 class ArchiveOrDeleteMixin(Output):
+
     @classmethod
     @verification_required
     @password_confirmation_required
@@ -512,8 +516,7 @@ class PasswordChangeMixin(Output):
                 root,
                 info,
                 password=kwargs.get("new_password1"),
-                **{user.USERNAME_FIELD: getattr(user, user.USERNAME_FIELD)}
-            )
+                **{user.USERNAME_FIELD: getattr(user, user.USERNAME_FIELD)})
             return_value = {}
             for field in cls._meta.fields:
                 return_value[field] = getattr(payload, field)
@@ -580,8 +583,8 @@ class SendSecondaryEmailActivationMixin(Output):
                 user = info.context.user
                 if async_email_func:
                     async_email_func(
-                        user.status.send_secondary_email_activation, (info, email)
-                    )
+                        user.status.send_secondary_email_activation,
+                        (info, email))
                 else:
                     user.status.send_secondary_email_activation(info, email)
                 return cls(success=True)

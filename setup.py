@@ -15,10 +15,10 @@ def get_version(package):
 
 
 tests_require = [
-    "pytest>=3.6.3",
-    "pytest-cov>=2.4.0",
-    "pytest-django>=3.1.2",
-    "coveralls",
+    # "pytest>=3.6.3",
+    # "pytest-cov>=2.4.0",
+    # "pytest-django>=3.1.2",
+    # "coveralls",
 ]
 
 dev_requires = ["black==19.3b0", "flake8==3.7.7"] + tests_require
@@ -34,20 +34,19 @@ setup(
     author_email="pedrobermoreira@gmail.com",
     maintainer="pedrobern",
     url="https://github.com/PedroBern/django-graphql-auth",
-    project_urls=OrderedDict(
-        (
-            ("Documentation", "https://django-graphql-auth.readthedocs.io/en/latest/"),
-            ("Issues", "https://github.com/PedroBern/django-graphql-auth/issues"),
-        )
-    ),
+    project_urls=OrderedDict((
+        ("Documentation",
+         "https://django-graphql-auth.readthedocs.io/en/latest/"),
+        ("Issues", "https://github.com/PedroBern/django-graphql-auth/issues"),
+    )),
     packages=find_packages(exclude=["tests*"]),
     install_requires=[
-        "Django>=2.2.0",
-        "django-graphql-jwt==0.3.0",
-        "django-filter>=2.2.0",
-        "graphene_django>=2.1.8",
-        "graphene>=2.1.8",
-        "PyJWT<2.0.0",
+        "Django>=4.1.7",
+        "django-graphql-jwt==0.3.4",
+        "django-filter>=22.1",
+        "graphene_django>=3.0.0",
+        "graphene>=3.2.1",
+        "PyJWT>=2.6.0",
     ],
     tests_require=tests_require,
     classifiers=[
@@ -61,11 +60,13 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Framework :: Django",
-        "Framework :: Django :: 2.2",
-        "Framework :: Django :: 3.0",
+        "Framework :: Django :: 4.0",
     ],
     keywords="api graphql rest relay graphene auth",
     zip_safe=False,
     include_package_data=True,
-    extras_require={"test": tests_require, "dev": dev_requires},
+    extras_require={
+        "test": tests_require,
+        "dev": dev_requires
+    },
 )
